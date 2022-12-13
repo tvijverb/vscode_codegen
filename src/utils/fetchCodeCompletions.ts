@@ -4,6 +4,19 @@ export type FetchCodeCompletions = {
     completions: Array<string>
 }
 
+export const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) => {
+    let timeout: any
+  
+    return (...args: Parameters<F>): Promise<ReturnType<F>> =>
+      new Promise(resolve => {
+        if (timeout) {
+          clearTimeout(timeout)
+        }
+  
+        timeout = setTimeout(() => resolve(func(...args)), waitFor)
+      })
+  }
+
 export function fetchCodeCompletionTexts(prompt: string, fileName: string, MODEL_NAME: string, API_KEY: string, USE_GPU: boolean): Promise<FetchCodeCompletions> {
     console.log(MODEL_NAME)
     // const API_URL = `https://api-inference.huggingface.co/models/${MODEL_NAME}`;
@@ -13,17 +26,17 @@ export function fetchCodeCompletionTexts(prompt: string, fileName: string, MODEL
     // const headers = { "Authorization": `Bearer ${API_KEY}` };
     return new Promise((resolve, reject) => {
         // Send post request to inference API
+        console.log(prompt)
         return fetch(API_URL, {
             method: "post",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 "input_text": prompt
-                // "inputs": prompt, "parameters": {
-                    // "max_new_tokens": 16, "return_full_text": false,
-                    // "do_sample": true, "temperature": 0.8, "top_p": 0.95,
-                    // "max_time": 10.0, "num_return_sequences": 3
-                   // CHANGE(reshinth) :  "use_gpu": USE_GPU is depreceated, refer https://huggingface.co/docs/api-inference/detailed_parameters#text-generation-task
-                // } 
-            }),
+            })
+            ,
             // headers: headers
         })
         .then(res => res.json())

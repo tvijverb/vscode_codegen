@@ -13,6 +13,8 @@ exports.activate = void 0;
 const vscode = require("vscode");
 const config_1 = require("./config");
 const fetchCodeCompletions_1 = require("./utils/fetchCodeCompletions");
+const lodash_1 = require("lodash");
+const debouncedFetchCodeCompletionTexts = (0, lodash_1.debounce)(fetchCodeCompletions_1.fetchCodeCompletionTexts, 2000);
 function activate(context) {
     const disposable = vscode.commands.registerCommand('extension.code-clippy-settings', () => {
         vscode.window.showInformationMessage('Show settings');
@@ -32,13 +34,21 @@ function activate(context) {
             if (textBeforeCursor.trim() === "") {
                 return { items: [] };
             }
-            const currLineBeforeCursor = document.getText(new vscode.Range(position.with(undefined, 0), position));
+            const start = new vscode.Position(position.line - 3, 0);
+            const end = position;
+            const range = new vscode.Range(start, end);
+            const last_3 = document.getText(range);
+            // const currLineBeforeCursor = document.getText(
+            // 	new vscode.Range(position.with(undefined, 0), position)
+            // );
+            console.log(textBeforeCursor);
             // Check if user's state meets one of the trigger criteria
-            if (config_1.default.SEARCH_PHARSE_END.includes(textBeforeCursor[textBeforeCursor.length - 1]) || currLineBeforeCursor.trim() === "") {
+            if (config_1.default.SEARCH_PHARSE_END.includes(textBeforeCursor[textBeforeCursor.length - 1])) {
                 let rs;
                 try {
                     // Fetch the code completion based on the text in the user's document
-                    rs = yield (0, fetchCodeCompletions_1.fetchCodeCompletionTexts)(textBeforeCursor, document.fileName, MODEL_NAME, API_KEY, USE_GPU);
+                    rs = yield (0, fetchCodeCompletions_1.fetchCodeCompletionTexts)(last_3, document.fileName, MODEL_NAME, API_KEY, USE_GPU);
+                    // rs = await fetchCodeCompletionTexts(textBeforeCursor, document.fileName, MODEL_NAME, API_KEY, USE_GPU);
                 }
                 catch (err) {
                     if (err instanceof Error) {

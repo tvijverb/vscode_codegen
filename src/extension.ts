@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import CSConfig from './config';
 import { fetchCodeCompletionTexts } from './utils/fetchCodeCompletions';
+import { debounce } from 'lodash'
+
+const debouncedFetchCodeCompletionTexts = debounce(fetchCodeCompletionTexts, 2000);
 
 export function activate(context: vscode.ExtensionContext) {
 	const disposable = vscode.commands.registerCommand(
@@ -27,17 +30,27 @@ export function activate(context: vscode.ExtensionContext) {
 			if (textBeforeCursor.trim() === "") {
 				return { items: [] };
 			}
-			const currLineBeforeCursor = document.getText(
-				new vscode.Range(position.with(undefined, 0), position)
-			);
+			const start = new vscode.Position(position.line - 3, 0);
+			const end = position;
+			const range = new vscode.Range(start, end);
+
+			const last_3 = document.getText(
+				range
+			)
+
+			// const currLineBeforeCursor = document.getText(
+			// 	new vscode.Range(position.with(undefined, 0), position)
+			// );
+			console.log(textBeforeCursor)
 
 			// Check if user's state meets one of the trigger criteria
-			if (CSConfig.SEARCH_PHARSE_END.includes(textBeforeCursor[textBeforeCursor.length - 1]) || currLineBeforeCursor.trim() === "") {
+			if (CSConfig.SEARCH_PHARSE_END.includes(textBeforeCursor[textBeforeCursor.length - 1])) {
 				let rs;
 
 				try {
 					// Fetch the code completion based on the text in the user's document
-					rs = await fetchCodeCompletionTexts(textBeforeCursor, document.fileName, MODEL_NAME, API_KEY, USE_GPU);
+					rs = await fetchCodeCompletionTexts(last_3, document.fileName, MODEL_NAME, API_KEY, USE_GPU);
+					// rs = await fetchCodeCompletionTexts(textBeforeCursor, document.fileName, MODEL_NAME, API_KEY, USE_GPU);
 				} catch (err) {
 
 					if (err instanceof Error) {

@@ -11,7 +11,8 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--enable-proposed-api"
+				"--enable-proposed-api",
+				"tvijverb.local-codegen"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"

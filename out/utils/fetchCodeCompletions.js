@@ -1,7 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchCodeCompletionTexts = void 0;
+exports.fetchCodeCompletionTexts = exports.debounce = void 0;
 const node_fetch_1 = require("node-fetch");
+const debounce = (func, waitFor) => {
+    let timeout;
+    return (...args) => new Promise(resolve => {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        timeout = setTimeout(() => resolve(func(...args)), waitFor);
+    });
+};
+exports.debounce = debounce;
 function fetchCodeCompletionTexts(prompt, fileName, MODEL_NAME, API_KEY, USE_GPU) {
     console.log(MODEL_NAME);
     // const API_URL = `https://api-inference.huggingface.co/models/${MODEL_NAME}`;
@@ -11,16 +21,15 @@ function fetchCodeCompletionTexts(prompt, fileName, MODEL_NAME, API_KEY, USE_GPU
     // const headers = { "Authorization": `Bearer ${API_KEY}` };
     return new Promise((resolve, reject) => {
         // Send post request to inference API
+        console.log(prompt);
         return (0, node_fetch_1.default)(API_URL, {
             method: "post",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 "input_text": prompt
-                // "inputs": prompt, "parameters": {
-                // "max_new_tokens": 16, "return_full_text": false,
-                // "do_sample": true, "temperature": 0.8, "top_p": 0.95,
-                // "max_time": 10.0, "num_return_sequences": 3
-                // CHANGE(reshinth) :  "use_gpu": USE_GPU is depreceated, refer https://huggingface.co/docs/api-inference/detailed_parameters#text-generation-task
-                // } 
             }),
             // headers: headers
         })
