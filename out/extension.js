@@ -16,46 +16,37 @@ const fetchCodeCompletions_1 = require("./utils/fetchCodeCompletions");
 const lodash_1 = require("lodash");
 const debouncedFetchCodeCompletionTexts = (0, lodash_1.debounce)(fetchCodeCompletions_1.fetchCodeCompletionTexts, 2000);
 function activate(context) {
-    const disposable = vscode.commands.registerCommand('extension.code-clippy-settings', () => {
-        vscode.window.showInformationMessage('Show settings');
-    });
-    context.subscriptions.push(disposable);
     const provider = {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         provideInlineCompletionItems: (document, position, context, token) => __awaiter(this, void 0, void 0, function* () {
             // Grab the api key from the extension's config
-            const configuration = vscode.workspace.getConfiguration('', document.uri);
-            const MODEL_NAME = configuration.get("conf.resource.hfModelName", "");
-            const API_KEY = configuration.get("conf.resource.hfAPIKey", "");
-            const USE_GPU = configuration.get("conf.resource.useGPU", false);
-            // vscode.comments.createCommentController
             const textBeforeCursor = document.getText();
             if (textBeforeCursor.trim() === "") {
                 return { items: [] };
             }
-            const start = new vscode.Position(position.line - 3, 0);
-            const end = position;
-            const range = new vscode.Range(start, end);
-            const last_3 = document.getText(range);
-            // const currLineBeforeCursor = document.getText(
-            // 	new vscode.Range(position.with(undefined, 0), position)
-            // );
-            console.log(textBeforeCursor);
+            let last_x = "";
+            let start;
+            let end;
+            let range;
+            for (let i = 0; i < 32; i++) {
+                start = new vscode.Position(position.line - i, 0);
+                end = position;
+                range = new vscode.Range(start, end);
+                last_x = document.getText(range);
+                if (last_x.includes("def ")) {
+                    break;
+                }
+            }
             // Check if user's state meets one of the trigger criteria
-            if (config_1.default.SEARCH_PHARSE_END.includes(textBeforeCursor[textBeforeCursor.length - 1])) {
+            if (config_1.default.SEARCH_PHARSE_END.includes(last_x[last_x.length - 1])) {
                 let rs;
                 try {
                     // Fetch the code completion based on the text in the user's document
-                    rs = yield (0, fetchCodeCompletions_1.fetchCodeCompletionTexts)(last_3, document.fileName, MODEL_NAME, API_KEY, USE_GPU);
-                    // rs = await fetchCodeCompletionTexts(textBeforeCursor, document.fileName, MODEL_NAME, API_KEY, USE_GPU);
+                    rs = yield (0, fetchCodeCompletions_1.fetchCodeCompletionTexts)(last_x);
                 }
                 catch (err) {
                     if (err instanceof Error) {
-                        // Check if it is an issue with API token and if so prompt user to enter a correct one
-                        if (err.toString() === "Error: Bearer token is invalid" || err.toString() === "Error: Authorization header is invalid, use 'Bearer API_TOKEN'") {
-                            vscode.window.showInputBox({ "prompt": "Please enter your HF API key in order to use Code Clippy", "password": true }).then(apiKey => configuration.update("conf.resource.hfAPIKey", apiKey));
-                        }
                         vscode.window.showErrorMessage(err.toString());
                     }
                     return { items: [] };

@@ -12,16 +12,12 @@ const debounce = (func, waitFor) => {
     });
 };
 exports.debounce = debounce;
-function fetchCodeCompletionTexts(prompt, fileName, MODEL_NAME, API_KEY, USE_GPU) {
-    console.log(MODEL_NAME);
-    // const API_URL = `https://api-inference.huggingface.co/models/${MODEL_NAME}`;
+function fetchCodeCompletionTexts(prompt) {
     const API_URL = `http://192.168.68.106:8000/`;
-    // Setup header with API key
     // eslint-disable-next-line @typescript-eslint/naming-convention
     // const headers = { "Authorization": `Bearer ${API_KEY}` };
     return new Promise((resolve, reject) => {
         // Send post request to inference API
-        console.log(prompt);
         return (0, node_fetch_1.default)(API_URL, {
             method: "post",
             headers: {
